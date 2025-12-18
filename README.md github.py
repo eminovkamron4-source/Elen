@@ -1,8 +1,6 @@
 import asyncio
 import os
 import uuid
-import hashlib
-import requests
 import sys
 
 from telethon import TelegramClient
@@ -11,55 +9,19 @@ from telethon.tl import functions
 from telethon.errors import UserAlreadyParticipantError, ChatNotModifiedError
 
 
-# ================== DEVICE ID ==================
+# ================== DEMO DEVICE ID (SERVER YO‘Q) ==================
 
-API_KEY = "Kamron12"
-SECRET_TOKEN = "KAMRONEMINOVUZ"
-URL = "https://kamron.infinityfreeapp.com/secure_api.php"
-ID_FILE = "device_id.txt"
+device_id = str(uuid.uuid4())
 
-if not os.path.exists(ID_FILE):
-    device_id = str(uuid.uuid4())
-    with open(ID_FILE, "w") as f:
-        f.write(device_id)
-else:
-    with open(ID_FILE, "r") as f:
-        device_id = f.read().strip()
-
-
-# ================== SIGNATURE ==================
-
-signature = hashlib.sha256((device_id + SECRET_TOKEN).encode()).hexdigest()
-
-
-# ================== SERVER CHECK ==================
-
-params = {
-    "api": API_KEY,
-    "id": device_id,
-    "signature": signature
-}
-
-try:
-    r = requests.get(URL, params=params, timeout=10)
-    server_msg = r.text.strip()
-except Exception as e:
-    print("❌ Server bilan bog‘lanib bo‘lmadi:", e)
-    sys.exit()
-
-print("Server javobi:", server_msg)
-
-if server_msg != "OK":
-    print("❌ RUXSAT YO‘Q. DASTUR TO‘XTADI.")
-    sys.exit()
-
+print("🚀 Demo ishlamoqda (shaxsiy server YO‘Q)")
+print("Sizning qurilma ID:", device_id)
 print("✅ RUXSAT BOR. DAVOM ETAMIZ...\n")
 
 
 # ================== SOZLAMALAR ==================
 
-API_ID = 22210367
-API_HASH = "29a1097b9da5f9a6e8bafaaee6dc6ae4"
+API_ID = 25797876
+API_HASH = "21d58c65a68492e2947ab809053cc8e6"
 BOT_USERNAME = "tinglabot"
 SESSIONS_DIR = "sessions"
 
@@ -87,9 +49,11 @@ async def add_account():
     phone = input("Telefon raqam (+998...): ").strip()
     session_name = phone.replace('+', '').replace(' ', '')
     path = os.path.join(SESSIONS_DIR, session_name)
+
     client = TelegramClient(path, API_ID, API_HASH)
     await client.start(phone=phone)
-    print("Akkaunt muvaffaqiyatli qo‘shildi!")
+
+    print("✅ Akkaunt muvaffaqiyatli qo‘shildi!")
     await client.disconnect()
     input("Enter bosing...")
 
@@ -120,10 +84,10 @@ async def create_one_group(client, idx):
             pass
 
         await client.send_message(channel, "Xush kelibsiz! Guruh tayyor")
-        print(f"Guruh yaratildi: {channel.title}")
+        print(f"✅ Guruh yaratildi: {channel.title}")
 
     except Exception as e:
-        print("Xato:", e)
+        print("❌ Xato:", e)
 
 
 # ================== AKKAUNT UCHUN ==================
@@ -147,7 +111,7 @@ async def create_groups():
     sessions = get_sessions()
 
     if not sessions:
-        print("Akkaunt yo‘q")
+        print("❌ Akkaunt yo‘q")
         input("Enter bosing...")
         return
 
@@ -157,22 +121,18 @@ async def create_groups():
 
     choice = input("Tanlang: ").strip()
 
-    if choice == str(len(sessions)+1):
+    if choice == str(len(sessions) + 1):
         selected = sessions
     else:
-        selected = [sessions[int(choice)-1]]
+        selected = [sessions[int(choice) - 1]]
 
     count = int(input("Nechta guruh?: "))
     delay = float(input("Delay (sek): "))
 
-    sem = asyncio.Semaphore(5)
+    for s in selected:
+        await groups_for_account(s, count, delay)
 
-    async def run(sess):
-        async with sem:
-            await groups_for_account(sess, count, delay)
-
-    await asyncio.gather(*[run(s) for s in selected])
-    print("BARCHA GURUHLAR YARATILDI")
+    print("✅ BARCHA GURUHLAR YARATILDI")
     input("Enter bosing...")
 
 
